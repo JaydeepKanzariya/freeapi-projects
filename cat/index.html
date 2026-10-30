@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Discover random cat photos, breed origins, temperaments, and recent cat history powered by FreeAPI." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect width='64' height='64' rx='16' fill='%23f97316'/%3E%3Cpath d='M18 44V20l10 8h8l10-8v24c0 4-6 8-14 8s-14-4-14-8z' stroke='white' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='27' cy='35' r='2' fill='white'/%3E%3Ccircle cx='37' cy='35' r='2' fill='white'/%3E%3C/svg%3E" />
+  <title>FreeAPI Cat Viewer — Random Feline Explorer</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media'
+    };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-orange-500 selection:text-white">
+  <noscript>
+    <div class="p-4 bg-orange-500 text-white text-center text-sm font-semibold">
+      JavaScript is required to use FreeAPI Cat Viewer.
+    </div>
+  </noscript>
+
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center font-bold shadow-sm shrink-0" aria-hidden="true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight truncate">FreeAPI Cat Viewer</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">Discover random cat breeds, traits, and recent history</p>
+        </div>
+      </div>
+
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60">
+        Press Space or Enter for a new cat
+      </span>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 flex flex-col items-center justify-center">
+    <div id="status-live" aria-live="polite" class="sr-only"></div>
+    <div id="app" class="w-full max-w-2xl"></div>
+  </main>
+
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+    <div class="max-w-4xl mx-auto px-4">
+      Built with FreeAPI
+    </div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
