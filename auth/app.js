@@ -2,9 +2,6 @@ const API = 'https://api.freeapi.app/api/v1';
 const TOKEN_KEY = 'freeapi_auth_token';
 
 const state = {
-  items: [],
-  page: 1,
-  hasNext: false,
   status: 'loading', // 'idle' | 'loading' | 'error' | 'success'
   submitting: false,
   error: null,
@@ -66,6 +63,28 @@ function setToken(token) {
   }
 }
 
+function captureFocusDescriptor() {
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement)) return null;
+  if (active.id) return { type: 'id', value: active.id };
+  const tab = active.getAttribute('data-tab');
+  if (tab) return { type: 'tab', value: tab };
+  return null;
+}
+
+function restoreFocusDescriptor(desc) {
+  if (!desc) return;
+  let target = null;
+  if (desc.type === 'id') {
+    target = document.getElementById(desc.value);
+  } else if (desc.type === 'tab') {
+    target = document.querySelector(`[data-tab="${CSS.escape(desc.value)}"]`);
+  }
+  if (target instanceof HTMLElement && !target.hasAttribute('disabled')) {
+    target.focus({ preventScroll: true });
+  }
+}
+
 function addToast(message, type = 'info') {
   const id = Date.now() + Math.random();
   state.toasts.push({ id, message: String(message || ''), type });
@@ -79,7 +98,8 @@ function addToast(message, type = 'info') {
 async function api(path, opts = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
-  const token = getToken();
+  const isPublicAuthRoute = path === '/users/login' || path === '/users/register';
+  const token = isPublicAuthRoute ? '' : getToken();
 
   const headers = {
     Accept: 'application/json',
@@ -140,7 +160,7 @@ function validateForm() {
 
   if (!username) {
     errors.username = 'Username is required.';
-  } else if (username !== username.toLowerCase() || /\s/.test(username)) {
+  } else if (state.tab === 'register' && (username !== username.toLowerCase() || /\s/.test(username))) {
     errors.username = 'Username must be lowercase with no spaces.';
   }
 
@@ -153,12 +173,31 @@ function validateForm() {
     }
   }
 
-  if (!password || password.length < 6) {
+  if (!password) {
+    errors.password = 'Password is required.';
+  } else if (state.tab === 'register' && password.length < 6) {
     errors.password = 'Password must be at least 6 characters.';
   }
 
   state.fieldErrors = errors;
   return Object.keys(errors).length === 0;
+}
+
+function focusFirstInvalidField() {
+  const order = [
+    ['username', 'username-input'],
+    ['email', 'email-input'],
+    ['password', 'password-input']
+  ];
+  for (const [key, inputId] of order) {
+    if (state.fieldErrors[key]) {
+      const el = document.getElementById(inputId);
+      if (el instanceof HTMLElement) {
+        el.focus();
+      }
+      break;
+    }
+  }
 }
 
 async function restoreSession(isExplicitRetry = false) {
@@ -231,9 +270,7 @@ async function submitAuth(payload, mode) {
         })
       });
       const token = res?.data?.accessToken || '';
-      if (token) {
-        setToken(token);
-      }
+      setToken(token || '');
       const user = res?.data?.user ?? null;
       state.user = user;
       state.avatarBroken = false;
@@ -266,11 +303,17 @@ async function handleLogout() {
     state.form.password = '';
     addToast(res?.message || 'Logged out successfully.', 'success');
   } catch (err) {
-    // Even if server logout fails (e.g. token already expired), allow clearing local token or retrying
-    setToken('');
-    state.user = null;
-    state.status = 'idle';
-    addToast(err?.message || 'Signed out locally.', 'info');
+    if (err?.status === 401 || err?.status === 403) {
+      setToken('');
+      state.user = null;
+      state.status = 'idle';
+      state.form.password = '';
+      addToast('Session had already expired. Signed out.', 'info');
+    } else {
+      state.status = 'error';
+      state.error = err?.message || 'Could not log out from server. Please retry.';
+      addToast(state.error, 'error');
+    }
   } finally {
     state.submitting = false;
     render();
@@ -312,7 +355,7 @@ function renderToasts() {
         <div role="status" class="pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border shadow-lg text-sm font-medium transition-all ${bg}">
           <span>${esc(t.message)}</span>
           <button type="button" data-dismiss-toast="${esc(t.id)}" aria-label="Dismiss notification" class="p-1 rounded-lg hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -324,7 +367,8 @@ function renderToasts() {
 
 function renderSkeleton() {
   return `
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm animate-pulse" aria-busy="true" aria-label="Checking session status">
+    <div role="status" aria-busy="true" aria-label="Checking session status" class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm animate-pulse">
+      <span class="sr-only">Checking session status...</span>
       <div class="flex items-center gap-4 mb-6">
         <div class="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-800"></div>
         <div class="flex-1 space-y-2">
@@ -354,7 +398,7 @@ function renderErrorBanner() {
           <p class="mt-1 text-red-700 dark:text-red-300">${esc(state.error)}</p>
           <div class="mt-3 flex flex-wrap gap-2">
             <button type="button" id="retry-btn" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Retry
@@ -382,7 +426,7 @@ function renderProfileCard() {
         ${
           avatarUrl
             ? `<img id="profile-avatar" src="${esc(avatarUrl)}" alt="${esc(username)}'s avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 shadow-sm" />`
-            : `<div class="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-500/40 flex items-center justify-center text-2xl font-bold shadow-sm" aria-label="${esc(username)} initials">${esc(getInitials(u))}</div>`
+            : `<div class="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-500/40 flex items-center justify-center text-2xl font-bold shadow-sm" role="img" aria-label="${esc(username)} initials">${esc(getInitials(u))}</div>`
         }
         <h2 class="mt-4 text-xl font-bold text-slate-900 dark:text-slate-100">@${esc(username)}</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 break-all">${esc(email)}</p>
@@ -429,7 +473,7 @@ function renderProfileCard() {
         >
           ${
             state.submitting
-              ? `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Signing out...`
+              ? `<svg aria-hidden="true" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Signing out...`
               : 'Logout'
           }
         </button>
@@ -451,6 +495,7 @@ function renderAuthForms() {
           type="button"
           role="tab"
           id="tab-login"
+          tabindex="${!isRegister ? '0' : '-1'}"
           aria-selected="${!isRegister}"
           aria-controls="panel-auth"
           data-tab="login"
@@ -466,6 +511,7 @@ function renderAuthForms() {
           type="button"
           role="tab"
           id="tab-register"
+          tabindex="${isRegister ? '0' : '-1'}"
           aria-selected="${isRegister}"
           aria-controls="panel-auth"
           data-tab="register"
@@ -504,8 +550,10 @@ function renderAuthForms() {
             />
             ${
               fe.username
-                ? `<p id="username-error" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.username)}</p>`
-                : `<p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Lowercase letters and numbers, no spaces.</p>`
+                ? `<p id="username-error" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.username)}</p>`
+                : isRegister
+                ? `<p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Lowercase letters and numbers, no spaces.</p>`
+                : ''
             }
           </div>
 
@@ -535,7 +583,7 @@ function renderAuthForms() {
             />
             ${
               fe.email
-                ? `<p id="email-error" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.email)}</p>`
+                ? `<p id="email-error" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.email)}</p>`
                 : ''
             }
           </div>
@@ -556,7 +604,7 @@ function renderAuthForms() {
                 autocomplete="${isRegister ? 'new-password' : 'current-password'}"
                 required
                 value="${esc(state.form.password)}"
-                placeholder="At least 6 characters"
+                placeholder="${isRegister ? 'At least 6 characters' : 'Enter your password'}"
                 aria-invalid="${fe.password ? 'true' : 'false'}"
                 ${fe.password ? 'aria-describedby="password-error"' : ''}
                 class="w-full pl-3.5 pr-16 py-2.5 rounded-xl border ${
@@ -577,7 +625,7 @@ function renderAuthForms() {
             </div>
             ${
               fe.password
-                ? `<p id="password-error" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.password)}</p>`
+                ? `<p id="password-error" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400">${esc(fe.password)}</p>`
                 : ''
             }
           </div>
@@ -605,12 +653,13 @@ function renderAuthForms() {
 
           <button
             type="submit"
+            id="submit-auth-btn"
             ${state.submitting ? 'disabled' : ''}
             class="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50"
           >
             ${
               state.submitting
-                ? `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> ${
+                ? `<svg aria-hidden="true" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> ${
                     isRegister ? 'Creating account...' : 'Signing in...'
                   }`
                 : isRegister
@@ -625,6 +674,7 @@ function renderAuthForms() {
 }
 
 function render() {
+  const focusDesc = captureFocusDescriptor();
   const main = document.getElementById('app');
   const badge = document.getElementById('header-badge');
 
@@ -661,10 +711,12 @@ function render() {
         render();
       });
     }
+    restoreFocusDescriptor(focusDesc);
     return;
   }
 
   main.innerHTML = renderAuthForms();
+  restoreFocusDescriptor(focusDesc);
 }
 
 // Event delegation
@@ -680,6 +732,8 @@ document.addEventListener('click', (e) => {
       state.fieldErrors = {};
       state.error = null;
       render();
+      const nextBtn = document.querySelector(`[data-tab="${CSS.escape(newTab)}"]`);
+      if (nextBtn instanceof HTMLElement) nextBtn.focus();
     }
     return;
   }
@@ -687,6 +741,8 @@ document.addEventListener('click', (e) => {
   if (target.closest('#toggle-password-btn')) {
     state.showPassword = !state.showPassword;
     render();
+    const btn = document.getElementById('toggle-password-btn');
+    if (btn) btn.focus();
     return;
   }
 
@@ -717,6 +773,21 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Arrow-key navigation for tabs
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement) || active.getAttribute('role') !== 'tab') return;
+  e.preventDefault();
+  const nextTab = state.tab === 'login' ? 'register' : 'login';
+  state.tab = nextTab;
+  state.fieldErrors = {};
+  state.error = null;
+  render();
+  const nextBtn = document.querySelector(`[data-tab="${nextTab}"]`);
+  if (nextBtn instanceof HTMLElement) nextBtn.focus();
+});
+
 document.addEventListener('input', (e) => {
   const target = e.target;
   if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
@@ -733,6 +804,7 @@ document.addEventListener('submit', (e) => {
 
   if (!validateForm()) {
     render();
+    focusFirstInvalidField();
     return;
   }
 
