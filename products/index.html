@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse e-commerce products with live category filters, sorting, and gallery modal powered by FreeAPI." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect width='64' height='64' rx='16' fill='%230284c7'/%3E%3Cpath d='M20 24h24l-2 24H22l-2-24z' stroke='white' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M26 24v-4a6 6 0 0112 0v4' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <title>FreeAPI Products — E-Commerce Catalog</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media'
+    };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+  <noscript>
+    <div class="p-4 bg-sky-600 text-white text-center text-sm font-semibold">
+      JavaScript is required to use FreeAPI Products.
+    </div>
+  </noscript>
+
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-bold shadow-sm shrink-0" aria-hidden="true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight truncate">FreeAPI Products</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">Browse products with live filters, sorting, and gallery preview</p>
+        </div>
+      </div>
+
+      <!-- Filter & Sort Controls -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto lg:min-w-[540px]">
+        <div class="relative">
+          <label for="search-input" class="sr-only">Search products by title or brand</label>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search title or brand..."
+            class="w-full pl-9 pr-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-sm focus:bg-white dark:focus:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          />
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <div>
+          <label for="category-select" class="sr-only">Filter by category</label>
+          <select
+            id="category-select"
+            class="w-full px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-sm focus:bg-white dark:focus:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          >
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="sort-select" class="sr-only">Sort products</label>
+          <select
+            id="sort-select"
+            class="w-full px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-sm focus:bg-white dark:focus:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          >
+            <option value="featured">Sort: Featured</option>
+            <option value="price-asc">Sort: Price ↑</option>
+            <option value="price-desc">Sort: Price ↓</option>
+            <option value="rating-desc">Sort: Rating</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div id="status-live" aria-live="polite" class="sr-only"></div>
+    <div id="app"></div>
+  </main>
+
+  <dialog
+    id="product-modal"
+    aria-labelledby="modal-product-title"
+    class="m-auto w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 p-0 shadow-2xl backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs"
+  >
+    <div id="modal-body" class="p-5 sm:p-8 max-h-[88vh] overflow-y-auto"></div>
+  </dialog>
+
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+    <div class="max-w-7xl mx-auto px-4">
+      Built with FreeAPI
+    </div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
