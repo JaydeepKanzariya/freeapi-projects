@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Explore timeless quotes, random quote of the moment, tag filters, and one-click clipboard copy." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect width='64' height='64' rx='16' fill='%23f59e0b'/%3E%3Cpath d='M28 34H18v-8c0-6 4-10 10-11l1.5 3c-3.5 1-5.5 3.5-5.5 6H28v10zm20 0H38v-8c0-6 4-10 10-11l1.5 3c-3.5 1-5.5 3.5-5.5 6H48v10z' fill='%230f172a'/%3E%3C/svg%3E" />
+  <title>FreeAPI Quotes — Wisdom &amp; Inspiration Gallery</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media'
+    };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950">
+  <noscript>
+    <div class="p-4 bg-amber-500 text-slate-950 text-center text-sm font-semibold">
+      JavaScript is required to use FreeAPI Quotes.
+    </div>
+  </noscript>
+
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-sm shrink-0" aria-hidden="true">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight truncate">FreeAPI Quotes</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">Read inspiring quotes, filter by tag, and copy your favourites</p>
+        </div>
+      </div>
+
+      <div class="w-full sm:w-80 relative">
+        <label for="search-input" class="sr-only">Search quotes by content or author</label>
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Search quote or author..."
+          class="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-sm focus:bg-white dark:focus:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+    <div id="status-live" aria-live="polite" class="sr-only"></div>
+
+    <!-- Hero: Quote of the moment -->
+    <section id="hero-section" aria-label="Quote of the moment"></section>
+
+    <!-- Tag filter bar -->
+    <section id="tags-section" aria-label="Filter by tag"></section>
+
+    <!-- Masonry Gallery -->
+    <section id="gallery-section" aria-label="Quotes collection"></section>
+  </main>
+
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+    <div class="max-w-7xl mx-auto px-4">
+      Built with FreeAPI
+    </div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
