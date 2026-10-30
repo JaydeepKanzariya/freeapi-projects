@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse random jokes, filter by category, and save your favourite jokes offline with FreeAPI." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect width='64' height='64' rx='16' fill='%23c026d3'/%3E%3Ccircle cx='32' cy='32' r='18' stroke='white' stroke-width='4'/%3E%3Ccircle cx='26' cy='28' r='2.5' fill='white'/%3E%3Ccircle cx='38' cy='28' r='2.5' fill='white'/%3E%3Cpath d='M24 36c2 4 6 6 8 6s6-2 8-6' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <title>FreeAPI Jokes — Daily Humour &amp; Favourites</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media'
+    };
+  </script>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-fuchsia-500 selection:text-white">
+  <noscript>
+    <div class="p-4 bg-fuchsia-600 text-white text-center text-sm font-semibold">
+      JavaScript is required to use FreeAPI Jokes.
+    </div>
+  </noscript>
+
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-fuchsia-600 text-white flex items-center justify-center font-bold shadow-sm shrink-0" aria-hidden="true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight truncate">FreeAPI Jokes</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">Random laughs, category browser, and offline favourites</p>
+        </div>
+      </div>
+
+      <div class="w-full sm:w-72 relative">
+        <label for="search-input" class="sr-only">Search jokes</label>
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Search jokes or category..."
+          class="w-full pl-10 pr-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-sm focus:bg-white dark:focus:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div id="status-live" aria-live="polite" class="sr-only"></div>
+
+    <!-- Hero: Joke of the moment -->
+    <section id="hero-section" aria-label="Joke of the moment"></section>
+
+    <!-- Tabs & List -->
+    <section id="list-section" aria-label="Jokes browser and favourites"></section>
+  </main>
+
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+    <div class="max-w-5xl mx-auto px-4">
+      Built with FreeAPI
+    </div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
